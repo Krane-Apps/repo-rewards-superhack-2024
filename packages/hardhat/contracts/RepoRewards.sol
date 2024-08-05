@@ -147,10 +147,8 @@ contract RepoRewards is Ownable {
 		require(success, "Reward transfer failed");
 	}
 
-	// Fallback function to accept Ether
 	receive() external payable {}
 
-	// Getter functions for public mappings
 	function getPoolManager(
 		address _wallet
 	) external view returns (PoolManager memory) {
@@ -165,21 +163,38 @@ contract RepoRewards is Ownable {
 
 	function getRepository(
 		uint256 _repoId
-	) external view returns (address[] memory, address[] memory, uint256) {
+	)
+		external
+		view
+		returns (address[] memory, address[] memory, uint256, Issue[] memory)
+	{
 		Repository storage repo = repositories[_repoId];
-		return (repo.poolManagers, repo.contributors, repo.poolRewards);
+		uint256 issueCount = 0;
+		for (uint i = 0; i < 1000; i++) {
+			if (repo.issueRewards[i].issueId != 0) {
+				issueCount++;
+			}
+		}
+		Issue[] memory issues = new Issue[](issueCount);
+		uint counter = 0;
+		for (uint i = 0; i < 1000; i++) {
+			if (repo.issueRewards[i].issueId != 0) {
+				issues[counter] = repo.issueRewards[i];
+				counter++;
+			}
+		}
+		return (repo.poolManagers, repo.contributors, repo.poolRewards, issues);
 	}
 
-	// Function to check if a user exists and their type
 	function checkUserType(
 		address _user
-	) external view returns (string memory) {
+	) external view returns (string memory, address) {
 		if (poolManagers[_user].wallet != address(0)) {
-			return "PoolManager";
+			return ("PoolManager", _user);
 		} else if (contributors[_user].wallet != address(0)) {
-			return "Contributor";
+			return ("Contributor", _user);
 		} else {
-			return "User does not exist";
+			return ("User does not exist", address(0));
 		}
 	}
 }
