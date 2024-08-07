@@ -116,16 +116,16 @@ export const EtherInput = ({
           className={`${
             nativeCurrencyPrice > 0
               ? ""
-              : "tooltip tooltip-secondary before:content-[attr(data-tip)] before:right-[-10px] before:left-auto before:transform-none"
+              : "tooltip tooltip-secondary before:content-[attr(data-tip)] before:right-[-10px] before:left-auto before:transform-none rounded-md"
           }`}
           data-tip="Unable to fetch price"
         >
           <button
-            className="btn btn-primary h-[2.2rem] min-h-[2.2rem]"
+            className="btn btn-primary min-h-[2.2rem] rounded-md"
             onClick={toggleMode}
             disabled={!internalUsdMode && !nativeCurrencyPrice}
           >
-            <ArrowsRightLeftIcon className="h-3 w-3 cursor-pointer" aria-hidden="true" />
+            <ArrowsRightLeftIcon className="h-4 w-4 cursor-pointer" aria-hidden="true" />
           </button>
         </div>
       }

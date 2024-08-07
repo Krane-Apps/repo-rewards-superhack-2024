@@ -9,7 +9,7 @@ const baseUrl = process.env.VERCEL_URL
   : `http://localhost:${process.env.PORT || 3000}`;
 const imageUrl = `${baseUrl}/thumbnail.jpg`;
 
-const title = "Scaffold-OP App";
+const title = "Repo Rewards - Superhack 2024";
 const titleTemplate = "%s | Scaffold-OP";
 const description = "Built with 🏗 Scaffold-OP";
 

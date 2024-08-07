@@ -3,74 +3,129 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { ethers } from "ethers";
-import type { NextPage } from "next";
-import { Balance } from "~~/components/scaffold-eth";
-import { EtherInput } from "~~/components/scaffold-eth";
-import { useDeployedContractInfo, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
+import { NextPage } from "next";
+import { useAccount } from "wagmi";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import AllocateRewardModal from "~~/components/home/AllocateRewardModal";
+import IssueTable from "~~/components/home/IssueTable";
+import RegisterLogin from "~~/components/home/RegisterLogin";
+import RepositoryTable from "~~/components/home/RepositoryTable";
+import StatsSection from "~~/components/home/StatsSection";
+import { Balance, EtherInput } from "~~/components/scaffold-eth";
+import { useDeployedContractInfo, useScaffoldContractRead, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
+import { Repository } from "~~/types/utils";
 
 const contractName = "RepoRewards";
+const organisations = ["base-org", "ethereum-optimism", "krane-apps"];
 
 const Home: NextPage = () => {
-  // const { address: connectedAddress } = useAccount();
-  const [repos, setRepos] = useState<any[]>([]);
+  const { address: connectedAddress } = useAccount();
+  const [repos, setRepos] = useState<Repository[]>([]);
   const [issues, setIssues] = useState<any[]>([]);
-  const [selectedRepo, setSelectedRepo] = useState<string | null>(null);
+  const [selectedRepo, setSelectedRepo] = useState<string>("");
   const [repoId, setRepoId] = useState<number | null>(null);
   const [amount, setAmount] = useState<string>("");
-  // const [error, setError] = useState<string | null>(null);
+  const [selectedIssueId, setSelectedIssueId] = useState<number | null>(null);
+  const [rewardAmount, setRewardAmount] = useState<string>("");
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [showRegister, setShowRegister] = useState<boolean>(false);
   const { data: deployedContractData } = useDeployedContractInfo(contractName);
+
   const { writeAsync: sendAddFundsTx, isMining: isAddingFunds } = useScaffoldContractWrite({
     contractName,
     functionName: "addFundToRepository",
-    args: [undefined],
+    args: [repoId ? BigInt(repoId) : undefined],
   });
-  const { writeAsync: sendAllocateRewardTx, isMining: isAllocatingReward } = useScaffoldContractWrite({
+
+  const { writeAsync: sendAllocateRewardTx } = useScaffoldContractWrite({
     contractName,
     functionName: "allocateIssueReward",
-    args: [undefined, undefined, undefined],
+    args: [
+      repoId ? BigInt(repoId) : undefined,
+      selectedIssueId ? BigInt(selectedIssueId) : undefined,
+      rewardAmount ? BigInt(ethers.parseEther(rewardAmount)) : undefined,
+    ],
   });
 
-  // const contractAddress = deployedContractData?.address;
-  // const contractAbi = deployedContractData?.abi;
+  const { data: userTypeData } = useScaffoldContractRead({
+    contractName,
+    functionName: "checkUserType",
+    args: [connectedAddress],
+  });
+
+  const { data: repoData, refetch } = useScaffoldContractRead({
+    contractName,
+    functionName: "getRepository",
+    args: [repoId ? BigInt(repoId) : undefined],
+  });
+
+  const stats = [
+    {
+      figureIcon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <path
+            fill="#7e7e02"
+            d="M11 15h2v2h-2zm0-8h2v6h-2zm1-5C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2m0 18a8 8 0 0 1-8-8a8 8 0 0 1-8-8a8 8 0 0 1-8 8a8 8 0 0 1-8 8"
+          />
+        </svg>
+      ),
+      title: selectedRepo ? "Repository Rewards" : "Available Funds",
+      value:
+        selectedRepo && repoData ? (
+          `${ethers.formatEther(repoData[2])} ETH`
+        ) : (
+          <Balance address={deployedContractData?.address} className="p-0 text-2xl font-bold" />
+        ),
+      description: "Total rewards of all repositories",
+      figureClassName: "text-primary ",
+      valueClassName: "p-0 text-2xl font-bold",
+      descriptionClassName: "",
+    },
+    {
+      figureIcon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          className="inline-block h-8 w-8 stroke-current"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+        </svg>
+      ),
+      title: selectedRepo ? "Open Issues" : "Repositories",
+      value: selectedRepo ? issues.length.toString() : repos.length.toString(),
+      description: selectedRepo ? "Total issues in the repository" : "Total repositories in the organisation",
+      figureClassName: "text-primary",
+      valueClassName: "",
+      descriptionClassName: "",
+    },
+  ];
+
+  const fetchRepos = async () => {
+    const allRepos: Repository[] = [];
+    for (const org of organisations) {
+      const res = await axios.get(`https://api.github.com/users/${org}/repos`);
+      const orgRepos = res.data.map((repo: any) => ({ ...repo, organisation: org }));
+      allRepos.push(...orgRepos);
+    }
+    setRepos(allRepos);
+  };
 
   useEffect(() => {
-    const fetchRepos = async () => {
-      try {
-        const res = await axios.get("https://api.github.com/users/ethereum-optimism/repos");
-        console.log("res.data repo ==", res.data);
-        setRepos(res.data);
-      } catch (err) {
-        // setError("Failed to fetch repositories. Please try again.");
-        setRepos([]);
-      }
-    };
     fetchRepos();
   }, []);
 
-  const handleFetchIssues = async (repoName: string, repoId: number) => {
+  const handleFetchIssues = async (repo: Repository) => {
     try {
-      const res = await axios.get(`https://api.github.com/repos/ethereum-optimism/${repoName}/issues`);
-      setIssues(res.data);
-      setSelectedRepo(repoName);
-      setRepoId(repoId);
-      // fetchRepositoryDetails(repoId);
+      setSelectedRepo(repo.name);
+      setRepoId(repo.id);
+      const res = await axios.get(`https://api.github.com/repos/${repo.organisation}/${repo.name}/issues`);
+      const issuesData = res.data;
+      setIssues(issuesData);
     } catch (err) {
-      // setError("Failed to fetch issues. Please try again.");
       setIssues([]);
     }
   };
-
-  // const fetchRepositoryDetails = async (repoId: number) => {
-  //   try {
-  //     const provider = new ethers.providers.Web3Provider((window as any).ethereum);
-  //     const contract = new ethers.Contract(contractAddress, contractAbi, provider);
-  //     const repoDetails = await contract.getRepository(repoId);
-  //     const poolRewards = ethers.formatEther(repoDetails[2]);
-  //     setRepos(prevRepos => prevRepos.map(repo => (repo.id === repoId ? { ...repo, poolRewards } : repo)));
-  //   } catch (error) {
-  //     console.error("Error fetching repository details:", error);
-  //   }
-  // };
 
   const handleAddFunds = async () => {
     if (repoId && amount) {
@@ -79,6 +134,7 @@ const Home: NextPage = () => {
           args: [BigInt(repoId)],
           value: ethers.parseEther(amount),
         });
+        refetch();
         console.log("Transaction successful:", tx);
       } catch (error) {
         console.error("Error adding funds:", error);
@@ -86,105 +142,80 @@ const Home: NextPage = () => {
     }
   };
 
-  const handleAllocateIssueReward = async (issueId: number, rewardAmount: string) => {
-    if (repoId) {
+  const handleAllocateIssueReward = async () => {
+    if (repoId && selectedIssueId && rewardAmount) {
       try {
-        const tx = await sendAllocateRewardTx({
-          args: [BigInt(repoId), BigInt(issueId), BigInt(ethers.parseEther(rewardAmount))],
-        });
+        const tx = await sendAllocateRewardTx();
         console.log("Reward allocation successful:", tx);
+        setModalOpen(false);
       } catch (error) {
         console.error("Error allocating reward:", error);
       }
     }
   };
 
+  const handleRegisterSuccess = () => {
+    setShowRegister(false);
+    window.location.reload();
+  };
+
+  if (showRegister) {
+    return <RegisterLogin onRegisterSuccess={handleRegisterSuccess} setShowRegister={setShowRegister} />;
+  }
+
   return (
     <>
-      <div className="flex flex-col flex-grow pt-10 px-5">
+      <div className="flex flex-col flex-grow pt-10 px-5 ">
         <div className="flex justify-between w-full mb-5">
-          <div className="flex">
-            <h2 className="text-xl font-bold">Organisation Balance:</h2>
-            <Balance address={deployedContractData?.address} className="px-3 min-h-[1rem] text-xl font-bold" />
-          </div>
-          {repoId && (
-            <div className="text-right flex">
+          <StatsSection stats={stats} />
+          {selectedRepo ? (
+            <div className="flex flex-col">
+              <button onClick={() => setSelectedRepo("")} className="btn btn-secondary mb-4 rounded-md">
+                <ArrowLeftIcon className="h-4 w-4" />
+                Back to Repositories
+              </button>
               <div className="flex">
                 <EtherInput value={amount} onChange={amount => setAmount(amount)} />
+                <button onClick={handleAddFunds} className="btn rounded-two btn-primary ml-2 rounded-md">
+                  {isAddingFunds ? "Adding Funds..." : `Add Funds`}
+                </button>
               </div>
-              <button onClick={handleAddFunds} className="btn rounded-two btn-primary ml-2">
-                {isAddingFunds ? "Adding Funds..." : `Add Funds to ${selectedRepo}`}
-              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {userTypeData ? (
+                <button onClick={() => console.log(userTypeData[0])} className="btn btn-accent rounded-md">
+                  {userTypeData[0]}
+                </button>
+              ) : (
+                <button onClick={() => setShowRegister(!showRegister)} className="btn btn-accent rounded-md">
+                  Login
+                </button>
+              )}
             </div>
           )}
         </div>
 
-        <div className="flex flex-grow">
-          <div className="w-1/2 p-4 bg-base-300 rounded-md mx-2">
-            <h2 className="text-2xl font-bold mb-4">Repositories</h2>
-            {repos.length > 0 ? (
-              repos.map(repo => (
-                <div key={repo.id} className="card bg-base-100 shadow-lg p-4 mb-4">
-                  <div className="flex flex-col" onClick={() => handleFetchIssues(repo.name, repo.id)}>
-                    <a
-                      href={repo.html_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="link font-bold text-lg"
-                    >
-                      {repo.name} ({repo.id})
-                    </a>
-                    <p className="text-sm text-gray-500 mt-1">{repo.description}</p>
-                    {repo.poolRewards && <p className="text-sm font-bold mt-1">Pool Rewards: {repo.poolRewards} ETH</p>}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p>No repositories found.</p>
-            )}
-          </div>
-
-          <div className="w-1/2 p-4 bg-base-300 rounded-md">
-            {selectedRepo ? (
-              <>
-                <h2 className="text-2xl font-bold mb-4">
-                  {issues.length} Open Issues in {selectedRepo}
-                </h2>
-                {issues.length > 0 ? (
-                  <div>
-                    {issues.map(issue => (
-                      <div key={issue.id} className="card bg-base-100 shadow-lg p-4 mb-4 flex justify-between">
-                        <div className="flex-grow">
-                          <a href={issue.html_url} target="_blank" rel="noopener noreferrer" className="link font-bold">
-                            {issue.title}
-                          </a>
-                          <p>{issue.body}</p>
-                        </div>
-                        <div className="flex items-center">
-                          <EtherInput
-                            value={issue.rewardAmount}
-                            onChange={reward => handleAllocateIssueReward(issue.id, reward)}
-                          />
-                          <button
-                            onClick={() => handleAllocateIssueReward(issue.id, issue.rewardAmount)}
-                            className="btn btn-primary self-start ml-2"
-                          >
-                            {isAllocatingReward ? "Allocating..." : "Allocate Reward"}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p>No issues found.</p>
-                )}
-              </>
-            ) : (
-              <h2 className="text-2xl font-bold mb-4">Please select a repository to see issues</h2>
-            )}
-          </div>
-        </div>
+        {selectedRepo ? (
+          <IssueTable
+            issues={issues}
+            onAllocateReward={(issueId: number) => {
+              setSelectedIssueId(issueId);
+              setModalOpen(true);
+            }}
+          />
+        ) : (
+          <RepositoryTable onRepoSelect={repo => handleFetchIssues(repo)} />
+        )}
       </div>
+
+      <AllocateRewardModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onAllocate={handleAllocateIssueReward}
+        rewardAmount={rewardAmount}
+        setRewardAmount={setRewardAmount}
+      />
     </>
   );
 };
