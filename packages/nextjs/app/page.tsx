@@ -16,8 +16,16 @@ import { useDeployedContractInfo, useScaffoldContractRead, useScaffoldContractWr
 import { Repository } from "~~/types/utils";
 
 const contractName = "RepoRewards";
-const organisations = ["base-org", "ethereum-optimism", "krane-apps"];
-
+const organisations = [
+  "base-org",
+  "ethereum-optimism",
+  "krane-apps",
+  "celo-org",
+  "blockscout",
+  "worldcoin",
+  "ethereum-attestation-service",
+  "mode-network",
+];
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
   const [repos, setRepos] = useState<Repository[]>([]);
@@ -183,15 +191,11 @@ const Home: NextPage = () => {
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              {userTypeData ? (
-                <button onClick={() => console.log(userTypeData[0])} className="btn btn-accent rounded-md">
-                  {userTypeData[0]}
-                </button>
-              ) : (
+              {userTypeData && userTypeData[0] == "User does not exist" ? (
                 <button onClick={() => setShowRegister(!showRegister)} className="btn btn-accent rounded-md">
                   Login
                 </button>
-              )}
+              ) : null}
             </div>
           )}
         </div>

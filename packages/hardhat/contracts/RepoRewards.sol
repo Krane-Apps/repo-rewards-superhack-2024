@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-
-contract RepoRewards is Ownable {
+contract RepoRewards {
 	struct PoolManager {
 		string username;
 		uint256 githubId;
@@ -35,11 +33,17 @@ contract RepoRewards is Ownable {
 	mapping(address => Contributor) public contributors;
 	mapping(uint256 => Repository) public repositories;
 
-	constructor() {}
+	address[] public poolManagerAddresses;
+	address[] public contributorAddresses;
+	address public admin;
+
+	constructor() {
+		admin = msg.sender;
+	}
 
 	modifier onlyPoolManager(uint256 repoId) {
 		require(
-			isPoolManager(repoId, msg.sender) || owner() == msg.sender,
+			isPoolManager(repoId, msg.sender) || msg.sender == admin,
 			"Not authorized"
 		);
 		_;
@@ -74,6 +78,7 @@ contract RepoRewards is Ownable {
 				worldId,
 				msg.sender
 			);
+			poolManagerAddresses.push(msg.sender);
 		} else {
 			contributors[msg.sender] = Contributor(
 				username,
@@ -81,6 +86,7 @@ contract RepoRewards is Ownable {
 				worldId,
 				msg.sender
 			);
+			contributorAddresses.push(msg.sender);
 		}
 	}
 
@@ -98,6 +104,7 @@ contract RepoRewards is Ownable {
 			"",
 			poolManager
 		);
+		poolManagerAddresses.push(poolManager);
 	}
 
 	function allocateIssueReward(
@@ -124,6 +131,7 @@ contract RepoRewards is Ownable {
 			repositories[repoId].contributors = new address[](0);
 			// Add the sender as the pool manager
 			repositories[repoId].poolManagers.push(msg.sender);
+			poolManagerAddresses.push(msg.sender);
 		}
 		repositories[repoId].poolRewards += msg.value;
 	}
@@ -196,5 +204,43 @@ contract RepoRewards is Ownable {
 		} else {
 			return ("User does not exist", address(0));
 		}
+	}
+
+	function getUserWalletByUsername(
+		string memory username
+	) external view returns (address) {
+		for (uint i = 0; i < poolManagerAddresses.length; i++) {
+			if (
+				keccak256(
+					abi.encodePacked(
+						poolManagers[poolManagerAddresses[i]].username
+					)
+				) == keccak256(abi.encodePacked(username))
+			) {
+				return poolManagers[poolManagerAddresses[i]].wallet;
+			}
+		}
+		for (uint i = 0; i < contributorAddresses.length; i++) {
+			if (
+				keccak256(
+					abi.encodePacked(
+						contributors[contributorAddresses[i]].username
+					)
+				) == keccak256(abi.encodePacked(username))
+			) {
+				return contributors[contributorAddresses[i]].wallet;
+			}
+		}
+		return address(0);
+	}
+
+	function getRepositoryRewards(
+		uint256[] memory repoIds
+	) external view returns (uint256[] memory) {
+		uint256[] memory rewards = new uint256[](repoIds.length);
+		for (uint i = 0; i < repoIds.length; i++) {
+			rewards[i] = repositories[repoIds[i]].poolRewards;
+		}
+		return rewards;
 	}
 }

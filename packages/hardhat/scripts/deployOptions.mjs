@@ -30,7 +30,7 @@ import inquirer from "inquirer";
       },
     ]);
 
-    let allNetworks = ["hardhat", "optimismSepolia", "baseSepolia", "zoraSepolia", "liskSepolia", "modeSepolia"];
+    let allNetworks = ["hardhat", "optimismSepolia", "baseSepolia",  "modeSepolia"];
     let selectedNetworks = answers.networks;
 
     // Check if "all the above" is selected

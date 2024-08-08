@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { IDKitWidget, VerificationLevel } from "@worldcoin/idkit";
 import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 import { UserRole } from "~~/types/utils";
 
@@ -31,14 +32,22 @@ const RegisterLogin: React.FC<RegisterLoginProps> = ({ onRegisterSuccess, setSho
     }
   };
 
+  const verifyProof = async (proof: any) => {
+    console.log("proof", proof);
+  };
+
+  const onSuccess = () => {
+    console.log("Success");
+  };
+
   return (
     <>
       <div className="flex justify-end w-full m-5 p-5 ">
-        <button onClick={() => setShowRegister(false)} className="btn btn-accent rounded-md mr-5">
+        <button onClick={() => setShowRegister(false)} className="btn btn-link btn-error rounded-md mr-5">
           Cancel
         </button>
       </div>
-      <div className="flex flex-col items-center flex-grow pt-10 px-5 justify-center">
+      <div className="flex flex-col items-center flex-grow pt-5 px-5 justify-center">
         <h2 className="text-xl font-bold mb-12">Register/Login as</h2>
         <div className="flex gap-4 justify-center">
           <div
@@ -82,6 +91,15 @@ const RegisterLogin: React.FC<RegisterLoginProps> = ({ onRegisterSuccess, setSho
               onChange={e => setGithubId(e.target.value)}
               className="input input-bordered w-full max-w-xs mb-4"
             />
+            <IDKitWidget
+              app_id="app_staging_bf567cc6f93645d37c11f0eb9fef7d49"
+              action="login"
+              verification_level={VerificationLevel.Device}
+              handleVerify={verifyProof}
+              onSuccess={onSuccess}
+            >
+              {({ open }) => <button onClick={open}>Verify with World ID</button>}
+            </IDKitWidget>
             <input
               type="text"
               placeholder="World ID"
