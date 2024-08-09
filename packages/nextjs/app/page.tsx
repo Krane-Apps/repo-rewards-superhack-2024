@@ -7,6 +7,7 @@ import { NextPage } from "next";
 import { useAccount } from "wagmi";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import AllocateRewardModal from "~~/components/home/AllocateRewardModal";
+import AttestationList from "~~/components/home/AttestationList";
 import IssueTable from "~~/components/home/IssueTable";
 import RegisterLogin from "~~/components/home/RegisterLogin";
 import RepositoryTable from "~~/components/home/RepositoryTable";
@@ -26,6 +27,7 @@ const organisations = [
   "ethereum-attestation-service",
   "mode-network",
 ];
+
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
   const [repos, setRepos] = useState<Repository[]>([]);
@@ -37,6 +39,12 @@ const Home: NextPage = () => {
   const [rewardAmount, setRewardAmount] = useState<string>("");
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [showRegister, setShowRegister] = useState<boolean>(false);
+  const [showAttestations, setShowAttestations] = useState<boolean>(false);
+
+  const handleViewAttestations = () => {
+    setShowAttestations(!showAttestations);
+  };
+
   const { data: deployedContractData } = useDeployedContractInfo(contractName);
 
   const { writeAsync: sendAddFundsTx, isMining: isAddingFunds } = useScaffoldContractWrite({
@@ -174,43 +182,61 @@ const Home: NextPage = () => {
   return (
     <>
       <div className="flex flex-col flex-grow pt-10 px-5 ">
-        <div className="flex justify-between w-full mb-5">
+        <div className="flex justify-between  mb-5 ">
           <StatsSection stats={stats} />
-          {selectedRepo ? (
-            <div className="flex flex-col">
-              <button onClick={() => setSelectedRepo("")} className="btn btn-secondary mb-4 rounded-md">
-                <ArrowLeftIcon className="h-4 w-4" />
-                Back to Repositories
-              </button>
-              <div className="flex">
-                <EtherInput value={amount} onChange={amount => setAmount(amount)} />
-                <button onClick={handleAddFunds} className="btn rounded-two btn-primary ml-2 rounded-md">
-                  {isAddingFunds ? "Adding Funds..." : `Add Funds`}
+          <div className="flex flex-col">
+            {selectedRepo ? (
+              <>
+                <button onClick={() => setSelectedRepo("")} className="btn btn-secondary mb-4 rounded-md">
+                  <ArrowLeftIcon className="h-4 w-4" />
+                  Back to Repositories
                 </button>
-              </div>
-            </div>
-          ) : (
+                <div className="flex">
+                  <EtherInput value={amount} onChange={amount => setAmount(amount)} />
+                  <button onClick={handleAddFunds} className="btn rounded-two btn-primary ml-2 rounded-md">
+                    {isAddingFunds ? "Adding Funds..." : `Add Funds`}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button onClick={handleViewAttestations} className="btn btn-secondary rounded-md">
+                <img src="/images/eas_logo.png" alt="eas" className="w-8 h-8" />
+                {showAttestations
+                  ? "Close Attestations"
+                  : userTypeData && userTypeData[0] === "User does not exist"
+                  ? "View Attestations"
+                  : "View My Attestations"}
+              </button>
+            )}
             <div className="flex flex-col gap-2">
               {userTypeData && userTypeData[0] == "User does not exist" ? (
-                <button onClick={() => setShowRegister(!showRegister)} className="btn btn-accent rounded-md">
+                <button onClick={() => setShowRegister(!showRegister)} className="btn btn-accent rounded-md mt-2">
                   Login
                 </button>
-              ) : null}
+              ) : (
+                <p className=" btn btn-accent">Role: {userTypeData && userTypeData[0]}</p>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
-        {selectedRepo ? (
-          <IssueTable
-            issues={issues}
-            onAllocateReward={(issueId: number) => {
-              setSelectedIssueId(issueId);
-              setModalOpen(true);
-            }}
-            repoId={repoId}
-          />
+        {showAttestations ? (
+          <AttestationList userType={userTypeData && userTypeData[0] ? userTypeData[0] : ""} />
         ) : (
-          <RepositoryTable onRepoSelect={repo => handleFetchIssues(repo)} />
+          <>
+            {selectedRepo ? (
+              <IssueTable
+                issues={issues}
+                onAllocateReward={(issueId: number) => {
+                  setSelectedIssueId(issueId);
+                  setModalOpen(true);
+                }}
+                repoId={repoId}
+              />
+            ) : (
+              <RepositoryTable onRepoSelect={repo => handleFetchIssues(repo)} />
+            )}
+          </>
         )}
       </div>
 
