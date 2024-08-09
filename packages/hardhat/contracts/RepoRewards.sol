@@ -26,6 +26,7 @@ contract RepoRewards {
 		address[] poolManagers;
 		address[] contributors;
 		uint256 poolRewards;
+		uint256 issueCount;
 		mapping(uint256 => Issue) issueRewards;
 	}
 
@@ -120,6 +121,8 @@ contract RepoRewards {
 			rewardAmount: reward,
 			status: "allocated"
 		});
+
+		repo.issueCount++;
 		repo.poolRewards -= reward;
 	}
 
@@ -146,6 +149,7 @@ contract RepoRewards {
 		uint256 reward = issue.rewardAmount;
 		require(reward > 0, "No reward allocated for this issue");
 		delete repo.issueRewards[issueId];
+		repo.issueCount--;
 		require(
 			address(this).balance >= reward,
 			"Insufficient contract balance"
@@ -177,21 +181,27 @@ contract RepoRewards {
 		returns (address[] memory, address[] memory, uint256, Issue[] memory)
 	{
 		Repository storage repo = repositories[_repoId];
-		uint256 issueCount = 0;
-		for (uint i = 0; i < 1000; i++) {
-			if (repo.issueRewards[i].issueId != 0) {
-				issueCount++;
-			}
-		}
-		Issue[] memory issues = new Issue[](issueCount);
+		Issue[] memory issues = new Issue[](repo.issueCount);
 		uint counter = 0;
-		for (uint i = 0; i < 1000; i++) {
+		for (uint i = 0; i < repo.issueCount; i++) {
 			if (repo.issueRewards[i].issueId != 0) {
 				issues[counter] = repo.issueRewards[i];
 				counter++;
 			}
 		}
 		return (repo.poolManagers, repo.contributors, repo.poolRewards, issues);
+	}
+
+	function getIssueRewards(
+		uint256 repoId,
+		uint256[] memory issueIds
+	) external view returns (uint256[] memory) {
+		Repository storage repo = repositories[repoId];
+		uint256[] memory rewards = new uint256[](issueIds.length);
+		for (uint i = 0; i < issueIds.length; i++) {
+			rewards[i] = repo.issueRewards[issueIds[i]].rewardAmount;
+		}
+		return rewards;
 	}
 
 	function checkUserType(

@@ -77,7 +77,7 @@ const Home: NextPage = () => {
           />
         </svg>
       ),
-      title: selectedRepo ? "Repository Rewards" : "Available Funds",
+      title: selectedRepo ? "Unallocated Rewards" : "Available Funds",
       value:
         selectedRepo && repoData ? (
           `${ethers.formatEther(repoData[2])} ETH`
@@ -207,6 +207,7 @@ const Home: NextPage = () => {
               setSelectedIssueId(issueId);
               setModalOpen(true);
             }}
+            repoId={repoId}
           />
         ) : (
           <RepositoryTable onRepoSelect={repo => handleFetchIssues(repo)} />

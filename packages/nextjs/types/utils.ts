@@ -34,6 +34,7 @@ export interface Issue {
 export interface IssueTableProps {
   issues: Issue[];
   onAllocateReward: (issueId: number) => void;
+  repoId: number | null;
 }
 
 export interface AllocateRewardModalProps {
