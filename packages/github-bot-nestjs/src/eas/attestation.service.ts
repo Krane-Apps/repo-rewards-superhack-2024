@@ -1,5 +1,5 @@
 // attestation.service.ts
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { EAS, SchemaEncoder } from "@ethereum-attestation-service/eas-sdk";
 import { ethers } from 'ethers';
 import { map, Observable } from 'rxjs';
@@ -82,6 +82,11 @@ export class AttestationService {
       console.log("New attestation UID:", newAttestationUID);
     } catch(error) {
       console.error('AttestationService Error: ', error);
+      throw new HttpException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        error: 'An error occurred',
+        message: error.message,
+    }, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -118,7 +123,11 @@ export class AttestationService {
         return data.attestations;
       } catch (error) {
         console.error('AttestationService Error, error fetching attestations:', error);
-        throw error;
+        throw new HttpException({
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'An error occurred',
+          message: error.message,
+      }, HttpStatus.INTERNAL_SERVER_ERROR);
       }
   }
 
@@ -156,7 +165,11 @@ export class AttestationService {
         return data.attestations;
     } catch (error) {
       console.error('Error fetching attestations by attester:', error);
-      throw error;
+      throw new HttpException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        error: 'An error occurred',
+        message: error.message,
+    }, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

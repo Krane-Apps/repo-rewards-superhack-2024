@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { AttestationService } from 'src/eas/attestation.service';
 import { Web3Service } from 'src/web3/web3.service';
 
@@ -63,6 +63,11 @@ export class BotService {
       );
     } catch(error) {
       console.error('BotService Error:', error);
+      throw new HttpException({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+        error: 'An error occurred',
+        message: error.message,
+    }, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

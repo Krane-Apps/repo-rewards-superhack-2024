@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ethers } from 'ethers';
 import * as fs from 'fs';
 import { contractAbi } from './repo-rewards.abi';
@@ -24,13 +24,6 @@ export class Web3Service {
       } catch(error) {
         console.error('Contracts not initialized: ', error);
       }
-        // const ALCHEMY_URL = `${this.config.optSepoliaNet}${this.config.apiKey}`;
-        // this.provider = new ethers.JsonRpcProvider(ALCHEMY_URL);
-        // this.signer = new ethers.Wallet(this.config.privateKey, this.provider);
-        // this.contract = new ethers.Contract(this.config.contractAddress, contractAbi, this.signer);
-        // if (!this.contract) {
-        //     throw new Error('Contract not initialized');
-        // }
     }
 
     private initializeContracts(chain: string, chainUrl: string, contractAddress: string) {
@@ -53,7 +46,11 @@ export class Web3Service {
           console.log(`Reward distributed successfully: ${receipt}`);
         } catch (error) {
           console.error('Error distributing reward:', error);
-          throw error;
+          throw new HttpException({
+            status: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: 'An error occurred',
+            message: error.message,
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -65,7 +62,11 @@ export class Web3Service {
           return response;
       } catch (error) {
           console.error('Function called: getUserWalletByUsername(), chain: ${chain}, Web3Service Error: ', error);
-          return '';
+          throw new HttpException({
+            status: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: 'An error occurred',
+            message: error.message,
+        }, HttpStatus.INTERNAL_SERVER_ERROR);
       }
   }
 

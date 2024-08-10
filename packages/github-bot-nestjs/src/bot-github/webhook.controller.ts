@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Req, Res } from '@nestjs/common';
+import { Controller, Get, HttpException, HttpStatus, Param, Post, Req, Res } from '@nestjs/common';
 import { BotService } from './bot.service';
 import { Request, Response } from 'express';
 import { WorldcoinService } from 'src/worldcoin/worldcoin.service';
@@ -28,7 +28,11 @@ export class WebhookController {
             return 'OK';
         } catch (error) {
             console.error('WebhookController, Error processing webhook:', error);
-            return 'Error processing webhook';
+            throw new HttpException({
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                error: 'An error occurred',
+                message: error.message,
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -39,6 +43,11 @@ export class WebhookController {
             this.worldcoinService.handleWorldIdVerification(proof, res);
         } catch(error) {
             console.error('WebhookController, Error verifying worldcoindId:', error);
+            throw new HttpException({
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+                error: 'An error occurred',
+                message: error.message,
+            }, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     };
 

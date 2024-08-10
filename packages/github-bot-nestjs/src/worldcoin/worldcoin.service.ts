@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class WorldcoinService {
@@ -33,6 +33,11 @@ export class WorldcoinService {
             }
           } catch(error) {
             console.error('WorldcoinService Error: ', error);
+            throw new HttpException({
+              status: HttpStatus.INTERNAL_SERVER_ERROR,
+              error: 'An error occurred',
+              message: error.message,
+          }, HttpStatus.INTERNAL_SERVER_ERROR);
           }
         }
     }
