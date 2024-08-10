@@ -18,10 +18,10 @@ const AttestationList: React.FC<{ userType: string }> = ({ userType }) => {
       try {
         let res;
         if (userType === "Contributor" && connectedAddress) {
-          res = await axios.get(`http://143.110.185.152:3000/webhook/attestationRecipient/${connectedAddress}`);
+          res = await axios.get(`https://143.110.185.152/webhook/attestationRecipient/${connectedAddress}`);
         } else {
           res = await axios.get(
-            "http://143.110.185.152:3000/webhook/attestationAttester/0xfe79ef5c242656220aD2b606AF755E505738F3C4",
+            "https://143.110.185.152/webhook/attestationAttester/0xfe79ef5c242656220aD2b606AF755E505738F3C4",
           );
         }
         setAttestations(res.data);

@@ -1,31 +1,28 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { IDKitWidget, VerificationLevel } from "@worldcoin/idkit";
 import axios from "axios";
+import { signInWithPopup } from "firebase/auth";
 import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 import { UserRole } from "~~/types/utils";
+import { auth, githubProvider } from "~~/utils/firebaseConfig";
 
 interface RegisterLoginProps {
   onRegisterSuccess: () => void;
   setShowRegister: (show: boolean) => void;
 }
 
-const DEBOUNCE_DELAY = 1000;
-
 const RegisterLogin: React.FC<RegisterLoginProps> = ({ onRegisterSuccess, setShowRegister }) => {
   const [selectedRole, setSelectedRole] = useState<string | undefined>(undefined);
-  const [username, setUsername] = useState("");
-  const [githubId, setGithubId] = useState("");
-  const [worldId, setWorldId] = useState("");
-  const [isVerified, setIsVerified] = useState(false);
-  const [githubUserDetails, setGithubUserDetails] = useState<any | null>(null);
-  const [githubError, setGithubError] = useState<string | null>(null);
-
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const [githubId, setGithubId] = useState<string>("");
+  const [username, setUsername] = useState<string | null>("");
+  const [worldId, setWorldId] = useState<string>("");
+  const [isVerified, setIsVerified] = useState<boolean>(false);
+  const [isGithubVerified, setIsGithubVerified] = useState<boolean>(false);
 
   const { writeAsync: sendRegisterUserTx } = useScaffoldContractWrite({
     contractName: "RepoRewards",
     functionName: "registerUser",
-    args: [username, githubId ? BigInt(githubId) : undefined, worldId, selectedRole],
+    args: [username ? username : "", githubId ? BigInt(githubId) : undefined, worldId, selectedRole],
   });
 
   const handleRegisterUser = async () => {
@@ -41,9 +38,9 @@ const RegisterLogin: React.FC<RegisterLoginProps> = ({ onRegisterSuccess, setSho
   };
 
   const verifyProof = async (proof: any) => {
-    console.log("proof", proof);
+    console.log("Proof received:", proof);
     try {
-      const response = await axios.post("http://143.110.185.152:3000/webhook/worldIdVerification", proof);
+      const response = await axios.post("https://143-110-185-152.nip.io/webhook/worldIdVerification", proof);
       console.log("Proof verification response:", response);
       setWorldId(response.data.nullifier_hash);
       setIsVerified(true);
@@ -52,60 +49,40 @@ const RegisterLogin: React.FC<RegisterLoginProps> = ({ onRegisterSuccess, setSho
     }
   };
 
-  const onSuccess = () => {
-    console.log("Success");
-  };
+  const handleGitHubLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, githubProvider);
+      const user = result.user;
+      const githubId = user.providerData[0].uid;
 
-  const fetchGithubUserDetails = async (username: string) => {
-    if (username) {
-      try {
-        const response = await axios.get(`https://api.github.com/users/${username}`);
-        console.log(response.data);
-        setGithubId(response.data.id);
-        setGithubUserDetails(response.data);
-        setGithubError(null);
-      } catch (error) {
-        setGithubUserDetails(null);
-        setGithubError("GitHub user not found");
-      }
-    } else {
-      setGithubUserDetails(null);
-      setGithubError(null);
+      // Request to GitHub API to get the username using the GitHub ID
+      const githubUserResponse = await axios.get(`https://api.github.com/user/${githubId}`);
+      const username = githubUserResponse.data.login;
+
+      setGithubId(githubId);
+      setUsername(username);
+      setIsGithubVerified(true);
+
+      console.log("GitHub User Details:", user);
+    } catch (error) {
+      console.error("GitHub login failed", error);
     }
   };
 
-  const handleGithubUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newUsername = e.target.value;
-    setUsername(newUsername);
-
-    if (debounceTimer.current) {
-      clearTimeout(debounceTimer.current);
-    }
-
-    debounceTimer.current = setTimeout(() => {
-      fetchGithubUserDetails(newUsername);
-    }, DEBOUNCE_DELAY);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
-    };
-  }, []);
+  const isSubmitDisabled = !(isGithubVerified && isVerified);
 
   return (
     <>
-      <div className="flex justify-end w-full m-5 p-5">
-        <button onClick={() => setShowRegister(false)} className="btn-link btn-error text-red-500 rounded-md mr-5">
+      <div className="flex justify-end w-full p-4">
+        <button onClick={() => setShowRegister(false)} className="text-red-500 hover:underline">
           Cancel
         </button>
       </div>
-      <div className="flex flex-col items-center flex-grow pt-5 px-5 justify-center">
-        <h2 className="text-2xl font-bold mb-8">Register/Login as {selectedRole}</h2>
+      <div className="flex flex-col items-center justify-center p-4 space-y-8">
+        <h2 className="text-2xl font-bold">Register/Login as {selectedRole}</h2>
+
         {!selectedRole && (
-          <div className="flex gap-8 justify-center">
+          <div className="flex gap-8">
             <div
               className={`card bg-white text-neutral-content w-72 cursor-pointer shadow-lg transition-transform transform hover:scale-105 ${
                 selectedRole === UserRole.PoolManager ? "border-2 border-blue-500" : ""
@@ -134,67 +111,67 @@ const RegisterLogin: React.FC<RegisterLoginProps> = ({ onRegisterSuccess, setSho
         )}
 
         {selectedRole && (
-          <div className="mt-8 flex flex-col w-full max-w-md bg-white p-6 rounded-lg shadow-md">
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">GitHub Username</label>
-              <input
-                type="text"
-                placeholder="Enter your GitHub username"
-                value={username}
-                onChange={handleGithubUsernameChange}
-                className="input input-bordered w-full mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md space-y-6">
+            <div className="flex items-center justify-between">
+              <label className="text-gray-700 text-sm font-bold">Step 1</label>
+              <button
+                onClick={handleGitHubLogin}
+                className="btn btn-primary w-60 bg-white text-black border border-gray-300 flex items-center justify-center space-x-2"
+              >
+                <img src="/images/github_login.png" alt="GitHub" className="w-6 h-6" />
+                <span>{isGithubVerified ? username : "Login with GitHub"}</span>
+              </button>
+              <img
+                src={isGithubVerified ? "/images/green_check_icon.png" : "/images/grey_check_icon.png"}
+                alt="GitHub Verified"
+                className="w-6 h-6 ml-2"
               />
-              {githubUserDetails && (
-                <div className="bg-gray-100 p-4 rounded-lg">
-                  <div className="flex items-center">
-                    <img src={githubUserDetails.avatar_url} alt="Avatar" className="w-12 h-12 rounded-full mr-4" />
-                    <div>
-                      <p className="font-semibold text-gray-700">GitHub User: {githubUserDetails.login}</p>
-                      <p className="text-gray-600">{githubUserDetails.name}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {githubError && <p className="text-red-500 mt-2">{githubError}</p>}
             </div>
 
-            <IDKitWidget
-              app_id="app_staging_bf567cc6f93645d37c11f0eb9fef7d49"
-              action="login"
-              verification_level={VerificationLevel.Device}
-              handleVerify={verifyProof}
-              onSuccess={onSuccess}
-            >
-              {({ open }) => (
-                <button
-                  onClick={open}
-                  className={`btn mb-4 hover:bg-black dis ${
-                    isVerified ? "bg-green-500" : "bg-black"
-                  } text-white flex items-center justify-center hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500`}
-                  disabled={isVerified}
-                  style={{ pointerEvents: isVerified ? "none" : "auto" }}
-                >
-                  {isVerified ? (
-                    <>
-                      <img src="/images/world_id_logo.png" alt="Worldcoin" className="w-8 h-8 mr-2" />
-                      Verified
-                    </>
-                  ) : (
-                    <>
-                      <img src="/images/world_id_logo.png" alt="Worldcoin" className="w-8 h-8 mr-2" />
-                      Verify with World ID
-                    </>
-                  )}
-                </button>
-              )}
-            </IDKitWidget>
+            <div className="flex items-center justify-between">
+              <label className="text-gray-700 text-sm font-bold">Step 2</label>
+              <IDKitWidget
+                app_id="app_staging_bf567cc6f93645d37c11f0eb9fef7d49"
+                action="login"
+                verification_level={VerificationLevel.Device}
+                handleVerify={verifyProof}
+                onSuccess={() => console.log("Verification Successful")}
+              >
+                {({ open }) => (
+                  <button
+                    onClick={open}
+                    className={`btn w-60 flex items-center justify-center space-x-2 ${
+                      isVerified ? "bg-green-500" : "bg-black"
+                    } text-white`}
+                    disabled={isVerified}
+                  >
+                    <img src="/images/worldcoin_white.png" alt="Worldcoin" className="w-6 h-6" />
+                    <span>{isVerified ? "Verified with World ID" : "Verify with World ID"}</span>
+                  </button>
+                )}
+              </IDKitWidget>
+              <img
+                src={isVerified ? "/images/green_check_icon.png" : "/images/grey_check_icon.png"}
+                alt="World ID Verified"
+                className="w-6 h-6 ml-2"
+              />
+            </div>
 
-            <button
-              onClick={handleRegisterUser}
-              className="btn btn-primary mt-4 w-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Submit
-            </button>
+            <div className="flex items-center justify-between">
+              <label className="text-gray-700 text-sm font-bold">Step 3</label>
+              <button
+                onClick={handleRegisterUser}
+                className="btn btn-primary w-60 bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                disabled={isSubmitDisabled}
+              >
+                Submit
+              </button>
+              <img
+                src={isSubmitDisabled ? "/images/grey_check_icon.png" : "/images/green_check_icon.png"}
+                alt="Submit Ready"
+                className="w-6 h-6 ml-2"
+              />
+            </div>
           </div>
         )}
       </div>
