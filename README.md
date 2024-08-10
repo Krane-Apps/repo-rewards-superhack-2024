@@ -1,41 +1,87 @@
-<div align="center">
-  <a href="https://optimism.io"><img alt="Optimism" src="https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/svg/OPTIMISM-R.svg" width=320></a>
-  <br />
-  <br />
-</div>
+# Repo Rewards
 
-# 🏗🔴 Scaffold-OP
+RepoRewards is a cool blockchain-based platform designed to make rewarding open-source contributions on GitHub super easy and transparent.
 
-<h4 align="center">
-  <a href="https://docs.scaffoldeth.io">Documentation</a> |
-  <a href="https://scaffoldeth.io">Website</a>
-</h4>
+## Table of Contents
 
-Scaffold-OP is a fork of Scaffold-ETH2 with minimal differences, providing additional dApp examples, native support for Superchain testnets, and more low-level instructions. We highly recommend the Scaffold-ETH2 docs as the primary guideline.
+- [Deployed Contracts](#deployed-contracts)
+- [Live Project](#live-project)
+- [Project Overview](#project-overview)
+- [Technical Stack](#technical-stack)
+- [Project Structure](#project-structure)
+- [Smart Contracts](#smart-contracts)
+- [Getting Started](#getting-started)
 
-🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on the Ethereum blockchain. It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts.
+---
 
-⚙️ Built using NextJS, RainbowKit, Hardhat, Wagmi, Viem, and Typescript.
+## Deployed Contracts
 
-- ✅ **Contract Hot Reload**: Your frontend auto-adapts to your smart contract as you edit it.
-- 🪝 **[Custom hooks](https://docs.scaffoldeth.io/hooks/)**: Collection of React hooks wrapper around [wagmi](https://wagmi.sh/) to simplify interactions with smart contracts with typescript autocompletion.
-- 🧱 [**Components**](https://docs.scaffoldeth.io/components/): Collection of common web3 components to quickly build your frontend.
-- 🔥 **Burner Wallet & Local Faucet**: Quickly test your application with a burner wallet and local faucet.
-- 🔐 **Integration with Wallet Providers**: Connect to different wallet providers and interact with the Ethereum network.
+| Network                    | Explorer Link                                                                                                                     |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Optimism Sepolia**       | [View on Explorer](https://sepolia-optimism.etherscan.io/address/0x78B3b2E85D678C4ADd2C46b47e0a1B632342Df59)                      |
+| **Base Sepolia**           | [View on Explorer](https://sepolia.basescan.org/address/0xB7401564Db89c1402704FCA219f80c4174FCb652)                               |
+| **Celo Alfajores Testnet** | [View on Explorer](https://explorer.celo.org/alfajores/address/0xACE638d0d36Bd6Cb3f8fEB9739F59492c4e2D13E/contracts#address-tabs) |
+| **Mode Testnet**           | [View on Explorer](https://sepolia.explorer.mode.network/address/0xB7401564Db89c1402704FCA219f80c4174FCb652)                      |
 
-![Debug Contracts tab](https://github.com/ethereum-optimism/scaffold-op/blob/main/packages/nextjs/public/scaffold-op-landing.png)
+## Live Project
 
-## Requirements
+Explore the live application [here](https://repo-rewards.vercel.app/).
 
-Before you begin, you need to install the following tools:
+## Project Overview
 
-- [Node (>= v18.17)](https://nodejs.org/en/download/)
-- Yarn ([v1](https://classic.yarnpkg.com/en/docs/install/) or [v2+](https://yarnpkg.com/getting-started/install))
-- [Git](https://git-scm.com/downloads)
+### Problem Statement
+
+In the world of open-source, there's a big issue: developers often don't get paid for their hard work. This isn't just frustrating—it's a real problem. Developers spend hours, even days, contributing to projects, but without payment or recognition, it can be incredibly demotivating. Worse, they have no proof to show future employers, making it tough to showcase their skills.
+
+For open-source organizations, this lack of incentives slows down progress. Projects that could drive innovation get delayed or even abandoned. So, not only are developers losing out, but the entire open-source community suffers, slowing down the pace of technological advancement. We need to fix this to keep open source thriving.
+
+### Solution
+
+Repo Rewards addresses these challenges by:
+
+- **Automated Contribution Tracking**: Integrates with GitHub to monitor and recognize contributions in real-time.
+- **Decentralized Identity Verification**: Utilizes Worldcoin's World ID for secure and private user verification without compromising anonymity.
+- **Transparent Reward Distribution**: Employs smart contracts to manage and distribute rewards transparently and automatically.
+- **Attestations via EAS**: Implements Ethereum Attestation Service (EAS) to attest to user actions and contributions, ensuring data integrity and trustworthiness.
+
+## Technical Stack
+
+- **Frontend**: React with Next.js framework.
+- **Smart Contracts**: Solidity, deployed using Hardhat.
+- **Blockchain Networks**: Optimism Sepolia, Base Sepolia, Celo Alfajores Testnet, Mode Testnet.
+- **Identity Verification**: [Worldcoin's World ID](https://worldcoin.org/).
+- **Attestations**: [Ethereum Attestation Service (EAS)](https://attest.sh/).
+- **Authentication**: Firebase Auth with GitHub provider.
+- **API Integration**: Axios for HTTP requests.
+
+## Project Structure
+
+```sh
+   repo-rewards/
+   ├── packages/
+   │ ├── hardhat/ # Smart contracts and deployment scripts
+   │ └── github-bot-nestjs/ # nest.js backend application
+   │ └── nextjs/ # Frontend application
+      │ ├── components/ # React components
+      │ ├── hooks/ # Custom React hooks
+      │ ├── pages/ # Next.js pages
+      │ ├── public/ # Static assets
+      │ └── utils/ # Utility functions and configurations
+   ├── .gitignore
+   ├── README.md
+   └── package.json
+```
+
+# Smart Contracts
+
+The core smart contract, **RepoRewards**, facilitates the registration of users (both Pool Managers and Contributors) and manages the reward distribution. Key functionalities include:
+
+- **User Registration**: Allows users to register by providing their GitHub username, GitHub ID, World ID, and selected role.
+- **Reward Distribution**: Automates the distribution of rewards based on predefined criteria and contributions.
 
 ## Quickstart
 
-To get started with Scaffold-OP, follow the steps below:
+To get started with Repo Rewards (Scaffold-OP), follow the steps below:
 
 1. Clone this repo & install dependencies
 
@@ -74,47 +120,3 @@ Run smart contract test with `yarn hardhat:test`
 - Edit your smart contract `YourContract.sol` in `packages/hardhat/contracts`
 - Edit your frontend in `packages/nextjs/pages`
 - Edit your deployment scripts in `packages/hardhat/deploy`
-
-## Deploy Contracts to Superchain Testnet(s)
-
-To deploy contracts to a remote testnet (e.g. Optimism Sepolia), follow the steps below:
-
-1. Get Superchain Sepolia ETH from the [Superchain Faucet](https://app.optimism.io/faucet)
-
-2. Inside the `packages/hardhat` directory, copy `.env.example` to `.env`.
-
-   ```bash
-   cd packages/hardhat && cp .env.example .env
-   ```
-
-3. Edit your `.env` to specify the environment variables. Only specifying the `DEPLOYER_PRIVATE_KEY` is necessary here. The contract will be deployed from the address associated with this private key, so make sure it has enough Sepolia ETH.
-
-   ```bash
-   DEPLOYER_PRIVATE_KEY = "your_private_key_with_sepolia_ETH";
-   ```
-
-4. Inside `scaffold-op`, run
-
-   ```bash
-   yarn deploy --network-options
-   ```
-
-   Use spacebar to make your selection(s). This command deploys all smart contracts in `packages/hardhat/contracts` to the selected network(s). Alternatively, you can try
-
-   ```bash
-   yarn deploy --network networkName
-   ```
-
-   Network names are found in `hardhat.config.js`. Please ensure you have enough Sepolia ETH on all these Superchains. If the deployments are successful, you will see the deployment tx hash on the terminal.
-
-## Adding Foundry
-
-Hardhat's NodeJS stack and cleaner deployment management makes it a better default for Scaffold-OP.
-
-To add Foundry to Scaffold-OP, follow this simple [tutorial](https://hardhat.org/hardhat-runner/docs/advanced/hardhat-and-foundry) by Hardhat. We recommend users who want more robust and faster testing to add Foundry.
-
-## Documentation
-
-We highly recommend visiting the original [docs](https://docs.scaffoldeth.io) to learn how to start building with Scaffold-ETH 2.
-
-To know more about its features, check out their [website](https://scaffoldeth.io).
