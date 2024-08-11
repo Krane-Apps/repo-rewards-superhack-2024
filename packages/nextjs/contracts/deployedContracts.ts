@@ -1981,6 +1981,197 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
   },
+  44787: {
+    RepoRewards: {
+      address: "0xACE638d0d36Bd6Cb3f8fEB9739F59492c4e2D13E",
+      abi: [
+        { type: "constructor", stateMutability: "nonpayable", inputs: [] },
+        {
+          type: "function",
+          stateMutability: "payable",
+          outputs: [],
+          name: "addFundToRepository",
+          inputs: [{ type: "uint256", name: "repoId", internalType: "uint256" }],
+        },
+        {
+          type: "function",
+          stateMutability: "nonpayable",
+          outputs: [],
+          name: "addPoolManager",
+          inputs: [
+            { type: "uint256", name: "repoId", internalType: "uint256" },
+            { type: "address", name: "poolManager", internalType: "address" },
+            { type: "string", name: "username", internalType: "string" },
+            { type: "uint256", name: "githubId", internalType: "uint256" },
+          ],
+        },
+        {
+          type: "function",
+          stateMutability: "view",
+          outputs: [{ type: "address", name: "", internalType: "address" }],
+          name: "admin",
+          inputs: [],
+        },
+        {
+          type: "function",
+          stateMutability: "nonpayable",
+          outputs: [],
+          name: "allocateIssueReward",
+          inputs: [
+            { type: "uint256", name: "repoId", internalType: "uint256" },
+            { type: "uint256", name: "issueId", internalType: "uint256" },
+            { type: "uint256", name: "reward", internalType: "uint256" },
+          ],
+        },
+        {
+          type: "function",
+          stateMutability: "view",
+          outputs: [
+            { type: "string", name: "", internalType: "string" },
+            { type: "address", name: "", internalType: "address" },
+          ],
+          name: "checkUserType",
+          inputs: [{ type: "address", name: "_user", internalType: "address" }],
+        },
+        {
+          type: "function",
+          stateMutability: "view",
+          outputs: [{ type: "address", name: "", internalType: "address" }],
+          name: "contributorAddresses",
+          inputs: [{ type: "uint256", name: "", internalType: "uint256" }],
+        },
+        {
+          type: "function",
+          stateMutability: "view",
+          outputs: [
+            { type: "string", name: "username", internalType: "string" },
+            { type: "uint256", name: "githubId", internalType: "uint256" },
+            { type: "string", name: "worldId", internalType: "string" },
+            { type: "address", name: "wallet", internalType: "address" },
+          ],
+          name: "contributors",
+          inputs: [{ type: "address", name: "", internalType: "address" }],
+        },
+        {
+          type: "function",
+          stateMutability: "nonpayable",
+          outputs: [],
+          name: "distributeReward",
+          inputs: [
+            { type: "uint256", name: "repoId", internalType: "uint256" },
+            { type: "uint256", name: "issueId", internalType: "uint256" },
+            { type: "address", name: "contributorAddress", internalType: "address payable" },
+          ],
+        },
+        {
+          type: "function",
+          stateMutability: "view",
+          outputs: [
+            {
+              type: "tuple",
+              name: "",
+              internalType: "struct RepoRewards.Contributor",
+              components: [
+                { type: "string", name: "username", internalType: "string" },
+                { type: "uint256", name: "githubId", internalType: "uint256" },
+                { type: "string", name: "worldId", internalType: "string" },
+                { type: "address", name: "wallet", internalType: "address" },
+              ],
+            },
+          ],
+          name: "getContributor",
+          inputs: [{ type: "address", name: "_wallet", internalType: "address" }],
+        },
+        {
+          type: "function",
+          stateMutability: "view",
+          outputs: [
+            {
+              type: "tuple",
+              name: "",
+              internalType: "struct RepoRewards.PoolManager",
+              components: [
+                { type: "string", name: "username", internalType: "string" },
+                { type: "uint256", name: "githubId", internalType: "uint256" },
+                { type: "string", name: "worldId", internalType: "string" },
+                { type: "address", name: "wallet", internalType: "address" },
+              ],
+            },
+          ],
+          name: "getPoolManager",
+          inputs: [{ type: "address", name: "_wallet", internalType: "address" }],
+        },
+        {
+          type: "function",
+          stateMutability: "view",
+          outputs: [
+            { type: "address[]", name: "", internalType: "address[]" },
+            { type: "address[]", name: "", internalType: "address[]" },
+            { type: "uint256", name: "", internalType: "uint256" },
+            {
+              type: "tuple[]",
+              name: "",
+              internalType: "struct RepoRewards.Issue[]",
+              components: [
+                { type: "uint256", name: "issueId", internalType: "uint256" },
+                { type: "uint256", name: "rewardAmount", internalType: "uint256" },
+                { type: "string", name: "status", internalType: "string" },
+              ],
+            },
+          ],
+          name: "getRepository",
+          inputs: [{ type: "uint256", name: "_repoId", internalType: "uint256" }],
+        },
+        {
+          type: "function",
+          stateMutability: "view",
+          outputs: [{ type: "address", name: "", internalType: "address" }],
+          name: "getUserWalletByUsername",
+          inputs: [{ type: "string", name: "username", internalType: "string" }],
+        },
+        {
+          type: "function",
+          stateMutability: "view",
+          outputs: [{ type: "address", name: "", internalType: "address" }],
+          name: "poolManagerAddresses",
+          inputs: [{ type: "uint256", name: "", internalType: "uint256" }],
+        },
+        {
+          type: "function",
+          stateMutability: "view",
+          outputs: [
+            { type: "string", name: "username", internalType: "string" },
+            { type: "uint256", name: "githubId", internalType: "uint256" },
+            { type: "string", name: "worldId", internalType: "string" },
+            { type: "address", name: "wallet", internalType: "address" },
+          ],
+          name: "poolManagers",
+          inputs: [{ type: "address", name: "", internalType: "address" }],
+        },
+        {
+          type: "function",
+          stateMutability: "nonpayable",
+          outputs: [],
+          name: "registerUser",
+          inputs: [
+            { type: "string", name: "username", internalType: "string" },
+            { type: "uint256", name: "githubId", internalType: "uint256" },
+            { type: "string", name: "worldId", internalType: "string" },
+            { type: "string", name: "typeOfUser", internalType: "string" },
+          ],
+        },
+        {
+          type: "function",
+          stateMutability: "view",
+          outputs: [{ type: "uint256", name: "poolRewards", internalType: "uint256" }],
+          name: "repositories",
+          inputs: [{ type: "uint256", name: "", internalType: "uint256" }],
+        },
+        { type: "receive", stateMutability: "payable" },
+      ],
+      inheritedFunctions: {},
+    },
+  },
 } as const;
 
 export default deployedContracts satisfies GenericContractsDeclaration;
